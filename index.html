@@ -44,8 +44,8 @@
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
         // --- 🔑 YOUR CONFIGURATION ---
-        const SUPABASE_URL = 'https://npojxnlqtlbnqlhlfnzy.supabase.co'
-        const SUPABASE_ANON_KEY = 'sb_publishable_pIC4oDtpOfZihkaufLmzVw_fEY-TDv6'
+        const SUPABASE_URL = 'https://plelrofdkiekpieonhzs.supabase.co'
+        const SUPABASE_ANON_KEY = 'sb_publishable_g6UPqGAN1a23RiHO5Niywg_b2rU3Ahe' 
         // -----------------------------
 
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
@@ -64,9 +64,8 @@
                 authUi.classList.add('hidden');
                 userInfo.classList.remove('hidden');
                 
-                // Display the user's login/username from the GitHub identity data
+                // Display the user's login/username
                 const userEmail = session.user.email || 'No public email found';
-                // Prioritize 'preferred_username' or 'user_name' from metadata, fall back to email
                 const userName = session.user.user_metadata?.preferred_username || session.user.user_metadata?.user_name || userEmail;
 
                 welcomeMessage.innerHTML = `Welcome back, <span class="font-mono text-indigo-600">${userName}</span>!`;
