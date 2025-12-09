@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase GitHub Auth</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        .icon { width: 1.25rem; height: 1.25rem; }
+    </style>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen">
+
+    <div class="w-full max-w-sm p-6 bg-white rounded-xl shadow-2xl space-y-6">
+        <div id="auth-ui">
+            <h2 class="text-2xl font-bold text-center text-gray-900 mb-6">
+                Sign In to Your App
+            </h2>
+
+            <button id="github-signin-btn"
+                class="w-full flex justify-center items-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <span data-feather="github" class="icon text-gray-800 mr-3"></span>
+                Sign in with GitHub
+            </button>
+
+            <p id="message" class="mt-4 text-center text-sm text-red-600"></p>
+        </div>
+
+        <div id="user-info" class="hidden text-center space-y-4">
+            <span data-feather="check-circle" class="icon text-green-500 mx-auto block w-10 h-10"></span>
+            <p class="text-lg font-semibold text-gray-900">
+                You are signed in!
+            </p>
+            <p id="welcome-message" class="text-gray-600 break-words"></p>
+            <button id="sign-out-btn"
+                class="w-full mt-4 px-4 py-3 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                Sign Out
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+        // --- 🔑 YOUR CONFIGURATION ---
+        const SUPABASE_URL = 'https://npojxnlqtlbnqlhlfnzy.supabase.co'
+        const SUPABASE_ANON_KEY = 'sb_publishable_pIC4oDtpOfZihkaufLmzVw_fEY-TDv6'
+        // -----------------------------
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+        const githubSigninBtn = document.getElementById('github-signin-btn')
+        const signOutBtn = document.getElementById('sign-out-btn')
+        const authUi = document.getElementById('auth-ui')
+        const userInfo = document.getElementById('user-info')
+        const message = document.getElementById('message')
+        const welcomeMessage = document.getElementById('welcome-message')
+
+        // Function to update the UI based on auth state
+        async function updateUI(session) {
+            if (session) {
+                // User is signed in
+                authUi.classList.add('hidden');
+                userInfo.classList.remove('hidden');
+                
+                // Display the user's login/username from the GitHub identity data
+                const userEmail = session.user.email || 'No public email found';
+                // Prioritize 'preferred_username' or 'user_name' from metadata, fall back to email
+                const userName = session.user.user_metadata?.preferred_username || session.user.user_metadata?.user_name || userEmail;
+
+                welcomeMessage.innerHTML = `Welcome back, <span class="font-mono text-indigo-600">${userName}</span>!`;
+
+            } else {
+                // User is signed out
+                authUi.classList.remove('hidden');
+                userInfo.classList.add('hidden');
+            }
+        }
+
+        // 1. Handle Sign In
+        githubSigninBtn.addEventListener('click', async () => {
+            message.textContent = '';
+            try {
+                // This call redirects the user to GitHub
+                const { error } = await supabase.auth.signInWithOAuth({
+                    provider: 'github',
+                    options: {
+                        // The redirect URL MUST match the one registered in Supabase and GitHub
+                        redirectTo: window.location.origin + window.location.pathname
+                    }
+                })
+
+                if (error) throw error
+
+            } catch (error) {
+                console.error('Sign-in Error:', error.message)
+                message.textContent = 'Error: ' + error.message;
+            }
+        })
+
+        // 2. Handle Sign Out
+        signOutBtn.addEventListener('click', async () => {
+            const { error } = await supabase.auth.signOut()
+            if (error) {
+                console.error('Sign-out Error:', error.message)
+                message.textContent = 'Sign-out Error: ' + error.message;
+            }
+        })
+
+        // 3. Listen for Authentication Changes (Handles initial load and state changes)
+        supabase.auth.onAuthStateChange((event, session) => {
+            updateUI(session);
+        })
+        
+        // Initial load check
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            updateUI(session);
+        });
+
+        // Initialize Feather icons
+        feather.replace();
+    </script>
+</body>
+</html>
