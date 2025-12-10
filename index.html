@@ -12,13 +12,13 @@
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
-</head>
+    </head>
 <body class="bg-gray-50 flex items-center justify-center min-h-screen">
 
     <div class="w-full max-w-sm p-6 bg-white rounded-xl shadow-2xl space-y-6">
         <div id="auth-ui">
             <h2 class="text-2xl font-bold text-center text-gray-900 mb-6">
-                Sign In to Your App
+                Sign In with GitHub
             </h2>
 
             <button id="github-signin-btn"
@@ -44,14 +44,9 @@
     </div>
 
     <script>
-        // Check if the global object 'supabase' exists (loaded from the <script> tag in the head)
-        if (typeof supabase === 'undefined') {
-            console.error("Supabase SDK did not load correctly. Please check network connection.");
-        }
-        
         // --- 🔑 YOUR CONFIGURATION ---
         const SUPABASE_URL = 'https://plelrofdkiekpieonhzs.supabase.co'
-        const SUPABASE_ANON_KEY = 'sb_publishable_g6UPqGAN1a23RiHO5Niywg_b2rU3Ahe' 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsZWxyb2Zka2lla3BpZW9uaHpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyOTgyNDgsImV4cCI6MjA4MDg3NDI0OH0.AgXapcvbkZrJrI2FCDNZ68OmbmmAXtC-UacAw0N7nMY' 
         // -----------------------------
 
         // Create the client using the global `supabase.createClient` function
@@ -89,6 +84,7 @@
                 const { error } = await supabaseClient.auth.signInWithOAuth({
                     provider: 'github',
                     options: {
+                        // The redirect URL MUST match the one registered in Supabase and GitHub
                         redirectTo: window.location.origin + window.location.pathname
                     }
                 })
