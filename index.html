@@ -9,6 +9,9 @@
     <style>
         .icon { width: 1.25rem; height: 1.25rem; }
     </style>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
 </head>
 <body class="bg-gray-50 flex items-center justify-center min-h-screen">
 
@@ -40,15 +43,19 @@
         </div>
     </div>
 
-    <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
-
+    <script>
+        // Check if the global object 'supabase' exists (loaded from the <script> tag in the head)
+        if (typeof supabase === 'undefined') {
+            console.error("Supabase SDK did not load correctly. Please check network connection.");
+        }
+        
         // --- 🔑 YOUR CONFIGURATION ---
         const SUPABASE_URL = 'https://plelrofdkiekpieonhzs.supabase.co'
         const SUPABASE_ANON_KEY = 'sb_publishable_g6UPqGAN1a23RiHO5Niywg_b2rU3Ahe' 
         // -----------------------------
 
-        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+        // Create the client using the global `supabase.createClient` function
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
         const githubSigninBtn = document.getElementById('github-signin-btn')
         const signOutBtn = document.getElementById('sign-out-btn')
@@ -60,18 +67,15 @@
         // Function to update the UI based on auth state
         async function updateUI(session) {
             if (session) {
-                // User is signed in
                 authUi.classList.add('hidden');
                 userInfo.classList.remove('hidden');
                 
-                // Display the user's login/username
                 const userEmail = session.user.email || 'No public email found';
                 const userName = session.user.user_metadata?.preferred_username || session.user.user_metadata?.user_name || userEmail;
 
                 welcomeMessage.innerHTML = `Welcome back, <span class="font-mono text-indigo-600">${userName}</span>!`;
 
             } else {
-                // User is signed out
                 authUi.classList.remove('hidden');
                 userInfo.classList.add('hidden');
             }
@@ -81,11 +85,10 @@
         githubSigninBtn.addEventListener('click', async () => {
             message.textContent = '';
             try {
-                // This call redirects the user to GitHub
-                const { error } = await supabase.auth.signInWithOAuth({
+                // IMPORTANT: Use supabaseClient for all interactions
+                const { error } = await supabaseClient.auth.signInWithOAuth({
                     provider: 'github',
                     options: {
-                        // The redirect URL MUST match the one registered in Supabase and GitHub
                         redirectTo: window.location.origin + window.location.pathname
                     }
                 })
@@ -100,7 +103,7 @@
 
         // 2. Handle Sign Out
         signOutBtn.addEventListener('click', async () => {
-            const { error } = await supabase.auth.signOut()
+            const { error } = await supabaseClient.auth.signOut()
             if (error) {
                 console.error('Sign-out Error:', error.message)
                 message.textContent = 'Sign-out Error: ' + error.message;
@@ -108,12 +111,12 @@
         })
 
         // 3. Listen for Authentication Changes (Handles initial load and state changes)
-        supabase.auth.onAuthStateChange((event, session) => {
+        supabaseClient.auth.onAuthStateChange((event, session) => {
             updateUI(session);
         })
         
         // Initial load check
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        supabaseClient.auth.getSession().then(({ data: { session } }) => {
             updateUI(session);
         });
 
